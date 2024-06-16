@@ -36,13 +36,16 @@ jobs:
         echo "Project built successfully."
 
     - name: Print working directory
-      run: echo "Current working directory: $(pwd)"
+      run: |
+        echo "Current working directory: $(pwd)"
 
     - name: List files in the directory
-      run: ls -la
+      run: |
+        ls -la
 
     - name: Print contents of deploy.yml
-      run: cat .github/workflows/deploy.yml
+      run: |
+        cat .github/workflows/deploy.yml
 
     - name: Deploy to XAMPP
       run: |
