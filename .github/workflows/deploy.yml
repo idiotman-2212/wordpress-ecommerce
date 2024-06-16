@@ -25,10 +25,16 @@ jobs:
           Write-Output "composer.json found."
 
       - name: Install PHP dependencies
-        run: >
+        run: |
           Write-Output "Installing PHP dependencies..."
-          composer install --no-interaction --no-dev || { Write-Output "Composer install failed"; exit 1; }
-          Write-Output "PHP dependencies installed."
+          $ErrorActionPreference = "Stop"
+          try {
+            composer install --no-interaction --no-dev
+            Write-Output "PHP dependencies installed."
+          } catch {
+            Write-Output "Composer install failed"
+            exit 1
+          }
 
       - name: List files in the directory
         run: |
@@ -41,7 +47,7 @@ jobs:
           Get-Content .github/workflows/deploy.yml
 
       - name: Deploy to XAMPP
-        run: >
+        run: |
           Write-Output "Deploying to XAMPP..."
           robocopy . C:\xampp\htdocs\foodorder /E /MIR /XD node_modules .git || { Write-Output "Deployment to XAMPP failed"; exit 1; }
           Write-Output "Deployment to XAMPP successful."
@@ -60,7 +66,7 @@ jobs:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Deploy via SSH
-        run: >
+        run: |
           Write-Output "Deploying via SSH..."
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "
           cd /path/to/your/wordpress && git pull origin main && wp-cli --path=/path/to/your/wordpress --allow-root plugin update --all"
