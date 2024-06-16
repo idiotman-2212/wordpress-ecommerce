@@ -49,7 +49,10 @@ jobs:
       - name: Deploy to XAMPP
         run: |
           Write-Output "Deploying to XAMPP..."
-          robocopy . C:\xampp\htdocs\foodorder /E /MIR /XD node_modules .git || { Write-Output "Deployment to XAMPP failed"; exit 1; }
+          robocopy . C:\xampp\htdocs\foodorder /E /MIR /XD node_modules .git || {
+            Write-Output "Deployment to XAMPP failed";
+            exit 1;
+          }
           Write-Output "Deployment to XAMPP successful."
 
       - name: Restart Nginx
