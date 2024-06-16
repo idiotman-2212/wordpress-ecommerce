@@ -11,7 +11,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3  # Cập nhật lên phiên bản mới nhất của actions/checkout
+      uses: actions/checkout@v3
 
     - name: Set up PHP
       uses: shivammathur/setup-php@v2
@@ -19,9 +19,9 @@ jobs:
         php-version: '7.4'
 
     - name: Set up Node.js
-      uses: actions/setup-node@v3  # Cập nhật lên phiên bản mới nhất của actions/setup-node
+      uses: actions/setup-node@v3
       with:
-        node-version: '20'  # Sử dụng Node.js 20
+        node-version: '20'
 
     - name: Install Dependencies
       run: |
