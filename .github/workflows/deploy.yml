@@ -17,8 +17,6 @@ jobs:
       uses: shivammathur/setup-php@v2
       with:
         php-version: '7.4'
-      env:
-        PHP_VERSION: '7.4'
 
     - name: Set up Node.js
       uses: actions/setup-node@v2
