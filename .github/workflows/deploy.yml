@@ -18,10 +18,17 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
+      - name: Test SSH Connection
+        run: |
+          echo "Testing SSH connection to ${{ secrets.SSH_HOST }}"
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "echo 'SSH connection successful!'"
+        continue-on-error: true
+
       - name: Deploy to XAMPP
         run: |
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
-          cd /path/to/xampp/htdocs/foodorder &&
+          echo "Deploying to XAMPP"
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
+          cd /xampp/htdocs/foodorder &&
           git pull origin main &&
           composer install &&
           npm install &&
