@@ -17,24 +17,49 @@ jobs:
       uses: shivammathur/setup-php@v2
       with:
         php-version: '7.4'
+      env:
+        PHP_VERSION: '7.4'
 
     - name: Set up Node.js
       uses: actions/setup-node@v2
       with:
         node-version: '14'
 
-    - name: Install dependencies
-      run: npm install
+    - name: Install Dependencies
+      run: |
+        echo "Installing npm dependencies..."
+        npm install
+        echo "Dependencies installed."
 
-    - name: Build project
-      run: npm run build
+    - name: Build Project
+      run: |
+        echo "Building the project..."
+        npm run build
+        echo "Project built successfully."
+
+    - name: Print working directory
+      run: echo "Current working directory: $(pwd)"
+
+    - name: List files in the directory
+      run: ls -la
+
+    - name: Print contents of deploy.yml
+      run: cat .github/workflows/deploy.yml
 
     - name: Deploy to XAMPP
       run: |
+        echo "Deploying to XAMPP..."
         robocopy . C:\xampp\htdocs\foodorder /E /MIR /XD node_modules .git
-        IF %ERRORLEVEL% LSS 8 exit %ERRORLEVEL%
+        if %ERRORLEVEL% LSS 8 (
+          echo "Deployment to XAMPP successful."
+        ) else (
+          echo "Deployment to XAMPP failed with error level %ERRORLEVEL%."
+          exit %ERRORLEVEL%
+        )
 
     - name: Restart Apache
       run: |
+        echo "Stopping Apache..."
         net stop Apache2.4
+        echo "Starting Apache..."
         net start Apache2.4
