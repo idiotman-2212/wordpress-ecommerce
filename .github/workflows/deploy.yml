@@ -53,6 +53,14 @@ jobs:
           $source = "."
           $destination = "C:\xampp\htdocs\foodorder"
           $logFile = "C:\xampp\htdocs\deploy.log"
+          $logDir = "C:\xampp\htdocs"
+          
+          # Tạo thư mục log nếu chưa tồn tại
+          if (-Not (Test-Path $logDir)) {
+            Write-Output "Creating log directory: $logDir"
+            New-Item -ItemType Directory -Path $logDir | Out-Null
+          }
+
           Write-Output "Running robocopy from $source to $destination"
           robocopy $source $destination /E /MIR /XD node_modules .git /LOG+:$logFile || {
             Write-Output "Deployment to XAMPP failed"
