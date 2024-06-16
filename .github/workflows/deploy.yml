@@ -3,7 +3,7 @@ name: Deploy WordPress Site
 on:
   push:
     branches:
-      - main
+      - main  # Chỉ định nhánh để workflow được kích hoạt
 
 jobs:
   build:
