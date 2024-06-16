@@ -11,29 +11,37 @@ on:
 jobs:
   deploy:
     runs-on: windows-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+
+      - name: Set up SSH Key
+        run: |
+          $env:SSH_KEY_PATH = "${{ secrets.SERVER_SSH_KEY }}"
+          $env:SSH_KEY_FILE = "C:\\Users\\DELL\\.ssh\\id_rsa"
+          $env:SSH_KEY_CONTENT = $env:SSH_KEY_PATH -replace '\\n', ''
+          New-Item -Path $env:USERPROFILE + '\.ssh\' -ItemType Directory -Force
+          [System.IO.File]::WriteAllText($env:SSH_KEY_FILE, $env:SSH_KEY_CONTENT)
+          chmod 600 $env:SSH_KEY_FILE
 
       - name: Sync WordPress Files to Server
         run: |
           $env:REMOTE_HOST = "${{ secrets.SERVER_HOST }}"
           $env:REMOTE_USER = "${{ secrets.SERVER_USER }}"
           $env:REMOTE_PATH = "/path/to/your/wordpress/directory/"  # Đường dẫn trên server của bạn
-          $env:SSH_KEY = "${{ secrets.SERVER_SSH_KEY }}"
-
-          # Sử dụng SCP để copy files
-          scp -i $env:SSH_KEY -r C:/xampp/htdocs/foodorder/* $env:REMOTE_USER@$env:REMOTE_HOST:$env:REMOTE_PATH
+          $env:SSH_KEY_PATH = "C:\\Users\\DELL\\.ssh\\id_rsa"
+          $env:SCP_CMD = "scp -i $env:SSH_KEY_PATH -r C:\\xampp\\htdocs\\foodorder\\* $env:REMOTE_USER@$env:REMOTE_HOST:$env:REMOTE_PATH"
+          Invoke-Expression -Command $env:SCP_CMD
 
       - name: Sync Nginx Configuration to Server
         run: |
           $env:REMOTE_HOST = "${{ secrets.SERVER_HOST }}"
           $env:REMOTE_USER = "${{ secrets.SERVER_USER }}"
           $env:REMOTE_PATH = "/path/to/your/nginx/directory/nginx.conf"  # Đường dẫn trên server của bạn
-          $env:SSH_KEY = "${{ secrets.SERVER_SSH_KEY }}"
-
-          # Sử dụng SCP để copy file nginx.conf
-          scp -i $env:SSH_KEY C:/nginx-1.25.5/conf/nginx.conf $env:REMOTE_USER@$env:REMOTE_HOST:$env:REMOTE_PATH
+          $env:SSH_KEY_PATH = "C:\\Users\\DELL\\.ssh\\id_rsa"
+          $env:SCP_CMD = "scp -i $env:SSH_KEY_PATH C:\\nginx-1.25.5\\conf\\nginx.conf $env:REMOTE_USER@$env:REMOTE_HOST:$env:REMOTE_PATH"
+          Invoke-Expression -Command $env:SCP_CMD
 
       - name: Restart Web Server
         uses: appleboy/ssh-action@master
@@ -42,6 +50,5 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            # Restart Nginx service
             net stop nginx
             net start nginx
