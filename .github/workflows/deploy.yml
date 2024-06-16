@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: Deploy WordPress
 
 on:
   push:
@@ -13,55 +13,36 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
         with:
-          node-version: '20'
+          php-version: '7.4'
 
-      - name: Install Dependencies
-        run: npm install
+      - name: Install dependencies
+        run: |
+          cd C:/xampp/htdocs/foodorder
+          composer install
+          npm install
 
-      - name: Build
-        run: npm run build
+      - name: Build project
+        run: |
+          cd C:/xampp/htdocs/foodorder
+          npm run build
 
   deploy:
     runs-on: windows-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Setup Nginx
+      - name: Deploy to XAMPP
         run: |
-          sc config nginx start= auto
-          net start nginx
-          echo "server {
-              listen       80;
-              server_name  localhost;
-
-              location / {
-                  proxy_pass http://127.0.0.1:8080;
-                  proxy_set_header Host \$host;
-                  proxy_set_header X-Real-IP \$remote_addr;
-                  proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-                  proxy_set_header X-Forwarded-Proto \$scheme;
-              }
-
-              location /shop {
-                  proxy_pass http://127.0.0.1:8089;
-                  proxy_set_header Host \$host;
-                  proxy_set_header X-Real-IP \$remote_addr;
-                  proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-                  proxy_set_header X-Forwarded-Proto \$scheme;
-              }
-
-              error_page 500 502 503 504 /50x.html;
-              location = /50x.html {
-                  root html;
-              }
-          }" > C:\nginx-1.25.5\conf\nginx.conf
-
-      - name: Deploy to Server
-        run: |
-          echo "Deploying application..."
-          start nginx
-          # Điều chỉnh các lệnh deploy cần thiết khác
+          cd C:/xampp/htdocs/foodorder
+          # Pull the latest code from the repository
+          git pull origin main
+          # Copy files to the XAMPP htdocs directory
+          xcopy /E /Y . C:/xampp/htdocs/foodorder
+          # Restart XAMPP services
+          sc stop Apache2.4
+          sc start Apache2.4
