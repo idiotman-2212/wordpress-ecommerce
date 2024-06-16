@@ -50,7 +50,7 @@ jobs:
     - name: Deploy to XAMPP
       run: |
         echo "Deploying to XAMPP..."
-        robocopy . C:\xampp\htdocs\foodorder /E /MIR /XD node_modules .git
+        robocopy . C:\xampp\htdocs\foodorder /E /MIR /XD node_modules .git /MAXLENGTH:255
         if %ERRORLEVEL% LSS 8 (
           echo "Deployment to XAMPP successful."
         ) else (
