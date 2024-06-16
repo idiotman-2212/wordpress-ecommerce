@@ -1,95 +1,47 @@
----
-name: Deploy WordPress Site
+name: CI/CD Pipeline
+
 on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  build:
+  deploy:
     runs-on: windows-latest
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      - name: Set up PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: "7.4"
+    - name: Sync WordPress Files to Server
+      uses: burnett01/rsync-deployments@5.1
+      with:
+        switches: -avzr --delete
+        path: ./
+        remote_path: /path/to/your/wordpress/directory/
+        remote_host: ${{ secrets.SERVER_HOST }}
+        remote_user: ${{ secrets.SERVER_USER }}
+        remote_key: ${{ secrets.SERVER_SSH_KEY }}
 
-      - name: Check for composer.json
-        run: |
-          if (!(Test-Path composer.json)) {
-            Write-Output "composer.json not found. Exiting..."
-            exit 1
-          }
-          Write-Output "composer.json found."
+    - name: Sync Nginx Configuration to Server
+      uses: burnett01/rsync-deployments@5.1
+      with:
+        switches: -avzr --delete
+        path: C:/nginx-1.25.5/conf/nginx.conf
+        remote_path: /path/to/your/nginx/directory/
+        remote_host: ${{ secrets.SERVER_HOST }}
+        remote_user: ${{ secrets.SERVER_USER }}
+        remote_key: ${{ secrets.SERVER_SSH_KEY }}
 
-      - name: Install PHP dependencies
-        run: |
-          Write-Output "Installing PHP dependencies..."
-          $ErrorActionPreference = "Stop"
-          try {
-            composer install --no-interaction --no-dev
-            Write-Output "PHP dependencies installed."
-          } catch {
-            Write-Output "Composer install failed"
-            exit 1
-          }
-
-      - name: List files in the directory
-        run: |
-          Write-Output "Listing files in the repository..."
-          Get-ChildItem -Recurse
-
-      - name: Print contents of deploy.yml
-        run: |
-          Write-Output "Contents of deploy.yml:"
-          Get-Content .github/workflows/deploy.yml
-
-      - name: Deploy to XAMPP
-        run: |
-          Write-Output "Deploying to XAMPP..."
-          $source = "."
-          $destination = "C:\xampp\htdocs\foodorder"
-          $logFile = "C:\xampp\htdocs\deploy.log"
-          $logDir = "C:\xampp\htdocs"
-          
-          # Tạo thư mục log nếu chưa tồn tại
-          if (-Not (Test-Path $logDir)) {
-            Write-Output "Creating log directory: $logDir"
-            New-Item -ItemType Directory -Path $logDir | Out-Null
-          }
-
-          Write-Output "Running robocopy from $source to $destination"
-          robocopy $source $destination /E /MIR /XD node_modules .git /LOG+:$logFile || {
-            Write-Output "Deployment to XAMPP failed"
-            Get-Content $logFile
-            exit 1
-          }
-          Write-Output "Deployment to XAMPP successful. Log file contents:"
-          Get-Content $logFile
-
-      - name: Check XAMPP folder permissions
-        run: |
-          Write-Output "Checking permissions for XAMPP directory..."
-          icacls "C:\xampp\htdocs\foodorder" /T
-
-      - name: Restart Nginx
-        run: |
-          Write-Output "Stopping Nginx..."
-          Stop-Service -Name nginx
-          Start-Sleep -Seconds 5
-          Write-Output "Starting Nginx..."
-          Start-Service -Name nginx
-
-      - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.5.3
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Deploy via SSH
-        run: |
-          Write-Output "Deploying via SSH..."
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "
-          cd /path/to/your/wordpress && git pull origin main && wp-cli --path=/path/to/your/wordpress --allow-root plugin update --all"
+    - name: Restart Web Server
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        script: |
+          net stop nginx
+          net start nginx
