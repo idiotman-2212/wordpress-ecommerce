@@ -1,66 +1,66 @@
+---
 name: Deploy WordPress Site
-
 on:
   push:
     branches:
-      - main  # Workflow được kích hoạt khi có push vào nhánh main
-
+      - main
 jobs:
   build:
     runs-on: windows-latest
-
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Set up PHP
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: '7.4'
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "7.4"
 
-    - name: Check for composer.json
-      run: |
-        if (!(Test-Path composer.json)) {
-          Write-Output "composer.json not found. Exiting..."
-          exit 1
-        }
-        Write-Output "composer.json found."
+      - name: Check for composer.json
+        run: |
+          if (!(Test-Path composer.json)) {
+            Write-Output "composer.json not found. Exiting..."
+            exit 1
+          }
+          Write-Output "composer.json found."
 
-    - name: Install PHP dependencies
-      run: |
-        Write-Output "Installing PHP dependencies..."
-        composer install --no-interaction --no-dev || { Write-Output "Composer install failed"; exit 1; }
-        Write-Output "PHP dependencies installed."
+      - name: Install PHP dependencies
+        run: >
+          Write-Output "Installing PHP dependencies..."
+          composer install --no-interaction --no-dev || { Write-Output "Composer install failed"; exit 1; }
+          Write-Output "PHP dependencies installed."
 
-    - name: List files in the directory
-      run: |
-        Write-Output "Listing files in the repository..."
-        Get-ChildItem -Recurse
+      - name: List files in the directory
+        run: |
+          Write-Output "Listing files in the repository..."
+          Get-ChildItem -Recurse
 
-    - name: Print contents of deploy.yml
-      run: |
-        Write-Output "Contents of deploy.yml:"
-        Get-Content .github/workflows/deploy.yml
+      - name: Print contents of deploy.yml
+        run: |
+          Write-Output "Contents of deploy.yml:"
+          Get-Content .github/workflows/deploy.yml
 
-    - name: Deploy to XAMPP
-      run: |
-        Write-Output "Deploying to XAMPP..."
-        robocopy . C:\xampp\htdocs\foodorder /E /MIR /XD node_modules .git || { Write-Output "Deployment to XAMPP failed"; exit 1; }
-        Write-Output "Deployment to XAMPP successful."
+      - name: Deploy to XAMPP
+        run: >
+          Write-Output "Deploying to XAMPP..."
+          robocopy . C:\xampp\htdocs\foodorder /E /MIR /XD node_modules .git || { Write-Output "Deployment to XAMPP failed"; exit 1; }
+          Write-Output "Deployment to XAMPP successful."
 
-    - name: Restart Apache
-      run: |
-        Write-Output "Stopping Apache..."
-        net stop Apache2.4
-        Write-Output "Starting Apache..."
-        net start Apache2.4
+      - name: Restart Nginx
+        run: |
+          Write-Output "Stopping Nginx..."
+          Stop-Service -Name nginx
+          Start-Sleep -Seconds 5
+          Write-Output "Starting Nginx..."
+          Start-Service -Name nginx
 
-    - name: Set up SSH
-      uses: webfactory/ssh-agent@v0.5.3
-      with:
-        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-    - name: Deploy via SSH
-      run: |
-        Write-Output "Deploying via SSH..."
-        ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "cd /path/to/your/wordpress && git pull origin main && wp-cli --path=/path/to/your/wordpress --allow-root plugin update --all"
+      - name: Deploy via SSH
+        run: >
+          Write-Output "Deploying via SSH..."
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "
+          cd /path/to/your/wordpress && git pull origin main && wp-cli --path=/path/to/your/wordpress --allow-root plugin update --all"
