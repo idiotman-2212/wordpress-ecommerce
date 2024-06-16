@@ -1,0 +1,40 @@
+name: Deploy WordPress Site
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '7.4'
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Build project
+      run: npm run build
+
+    - name: Deploy to XAMPP
+      run: |
+        robocopy . C:\xampp\htdocs\foodorder /E /MIR /XD node_modules .git
+        IF %ERRORLEVEL% LSS 8 exit %ERRORLEVEL%
+
+    - name: Restart Apache
+      run: |
+        net stop Apache2.4
+        net start Apache2.4
