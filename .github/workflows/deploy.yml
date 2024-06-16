@@ -44,7 +44,7 @@ jobs:
           # Đặt quyền truy cập cho tệp SSH key
           Write-Output "Setting permissions for $env:SSH_KEY_PATH"
           icacls $env:SSH_KEY_PATH /inheritance:r
-          icacls $env:SSH_KEY_PATH /grant:r "${env:USERNAME}:(R)"
+          icacls $env:SSH_KEY_PATH /grant:r "${env:USERNAME}:(R,W)"
         shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
 
       - name: Sync WordPress Files to Server
