@@ -23,19 +23,23 @@ jobs:
           
           # Tạo thư mục .ssh nếu chưa tồn tại
           if (-Not (Test-Path -Path "$env:USERPROFILE\.ssh")) {
+              Write-Output "Creating .ssh directory"
               New-Item -Path "$env:USERPROFILE\.ssh" -ItemType Directory -Force
           }
 
           # Xóa tệp SSH key cũ nếu tồn tại
           if (Test-Path -Path $env:SSH_KEY_PATH) {
+              Write-Output "Removing existing SSH key"
               Remove-Item -Path $env:SSH_KEY_PATH -Force
           }
 
           # Lưu SSH key vào tệp
+          Write-Output "Writing SSH key to $env:SSH_KEY_PATH"
           $env:SSH_KEY_CONTENT = $env:SSH_KEY_CONTENT -replace '\\n', ''
           [System.IO.File]::WriteAllText($env:SSH_KEY_PATH, $env:SSH_KEY_CONTENT)
 
           # Đặt quyền truy cập cho tệp SSH key
+          Write-Output "Setting permissions for $env:SSH_KEY_PATH"
           icacls $env:SSH_KEY_PATH /inheritance:r
           icacls $env:SSH_KEY_PATH /grant:r "Everyone:(R)"
 
@@ -45,7 +49,7 @@ jobs:
           $env:REMOTE_USER = "${{ secrets.SERVER_USER }}"
           $env:REMOTE_PATH = "/path/to/your/wordpress/directory/"  # Đường dẫn trên server của bạn
           $env:SCP_CMD = "scp -i $env:SSH_KEY_PATH -r C:\\xampp\\htdocs\\foodorder\\* $env:REMOTE_USER@$env:REMOTE_HOST:$env:REMOTE_PATH"
-          Write-Output "Running SCP command: $env:SCP_CMD"
+          Write-Output "Running SCP command to sync WordPress files: $env:SCP_CMD"
           Invoke-Expression -Command $env:SCP_CMD
 
       - name: Sync Nginx Configuration to Server
@@ -54,7 +58,7 @@ jobs:
           $env:REMOTE_USER = "${{ secrets.SERVER_USER }}"
           $env:REMOTE_PATH = "/path/to/your/nginx/directory/nginx.conf"  # Đường dẫn trên server của bạn
           $env:SCP_CMD = "scp -i $env:SSH_KEY_PATH C:\\nginx-1.25.5\\conf\\nginx.conf $env:REMOTE_USER@$env:REMOTE_HOST:$env:REMOTE_PATH"
-          Write-Output "Running SCP command: $env:SCP_CMD"
+          Write-Output "Running SCP command to sync Nginx config: $env:SCP_CMD"
           Invoke-Expression -Command $env:SCP_CMD
 
       - name: Restart Web Server
