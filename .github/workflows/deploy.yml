@@ -19,30 +19,32 @@ jobs:
       - name: Set up SSH Key
         run: |
           $env:SSH_KEY_CONTENT = "${{ secrets.SERVER_SSH_KEY }}"
-          $env:SSH_KEY_PATH = "C:\\Users\\DELL\\.ssh\\id_rsa.pub"
-          
+          $env:SSH_KEY_PATH = "C:\\Users\\DELL\\.ssh\\id_rsa"
+
           # Tạo thư mục .ssh nếu chưa tồn tại
           $sshDir = "$env:USERPROFILE\.ssh"
           if (-Not (Test-Path $sshDir)) {
-              Write-Output "Creating .ssh directory"
+              Write-Output "Creating .ssh directory at $sshDir"
               New-Item -Path $sshDir -ItemType Directory -Force
+          } else {
+              Write-Output ".ssh directory already exists"
           }
 
           # Xóa tệp SSH key cũ nếu tồn tại
-          $keyPath = "$env:USERPROFILE\.ssh\id_rsa.pub"
-          if (Test-Path $keyPath) {
-              Write-Output "Removing existing SSH key"
-              Remove-Item -Path $keyPath -Force
+          if (Test-Path $env:SSH_KEY_PATH) {
+              Write-Output "Removing existing SSH key at $env:SSH_KEY_PATH"
+              Remove-Item -Path $env:SSH_KEY_PATH -Force
           }
 
           # Lưu SSH key vào tệp
-          Write-Output "Writing SSH key to $keyPath"
-          [System.IO.File]::WriteAllText($keyPath, $env:SSH_KEY_CONTENT)
-          
+          Write-Output "Writing SSH key to $env:SSH_KEY_PATH"
+          $env:SSH_KEY_CONTENT = $env:SSH_KEY_CONTENT -replace '\\n', ''
+          [System.IO.File]::WriteAllText($env:SSH_KEY_PATH, $env:SSH_KEY_CONTENT)
+
           # Đặt quyền truy cập cho tệp SSH key
-          Write-Output "Setting permissions for $keyPath"
-          icacls $keyPath /inheritance:r
-          icacls $keyPath /grant:r "${env:USERNAME}:(R)"
+          Write-Output "Setting permissions for $env:SSH_KEY_PATH"
+          icacls $env:SSH_KEY_PATH /inheritance:r
+          icacls $env:SSH_KEY_PATH /grant:r "${env:USERNAME}:(R)"
         shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
 
       - name: Sync WordPress Files to Server
@@ -50,7 +52,7 @@ jobs:
           $env:REMOTE_HOST = "${{ secrets.SERVER_HOST }}"
           $env:REMOTE_USER = "${{ secrets.SERVER_USER }}"
           $env:REMOTE_PATH = "/path/to/your/wordpress/directory/"
-          $env:SCP_CMD = "scp -i C:\\Users\\DELL\\.ssh\\id_rsa.pub -r C:\\xampp\\htdocs\\foodorder\\* $env:REMOTE_USER@$env:REMOTE_HOST:$env:REMOTE_PATH"
+          $env:SCP_CMD = "scp -i C:\\Users\\DELL\\.ssh\\id_rsa -r C:\\xampp\\htdocs\\foodorder\\* $env:REMOTE_USER@$env:REMOTE_HOST:$env:REMOTE_PATH"
           Write-Output "Running SCP command to sync WordPress files: $env:SCP_CMD"
           Invoke-Expression -Command $env:SCP_CMD
 
@@ -59,7 +61,7 @@ jobs:
           $env:REMOTE_HOST = "${{ secrets.SERVER_HOST }}"
           $env:REMOTE_USER = "${{ secrets.SERVER_USER }}"
           $env:REMOTE_PATH = "/path/to/your/nginx/directory/nginx.conf"
-          $env:SCP_CMD = "scp -i C:\\Users\\DELL\\.ssh\\id_rsa.pub C:\\nginx-1.25.5\\conf\\nginx.conf $env:REMOTE_USER@$env:REMOTE_HOST:$env:REMOTE_PATH"
+          $env:SCP_CMD = "scp -i C:\\Users\\DELL\\.ssh\\id_rsa C:\\nginx-1.25.5\\conf\\nginx.conf $env:REMOTE_USER@$env:REMOTE_HOST:$env:REMOTE_PATH"
           Write-Output "Running SCP command to sync Nginx config: $env:SCP_CMD"
           Invoke-Expression -Command $env:SCP_CMD
 
