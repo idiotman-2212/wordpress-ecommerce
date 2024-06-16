@@ -18,45 +18,23 @@ jobs:
       with:
         php-version: '7.4'
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '20'
-
-    - name: Install Dependencies
+    - name: Install PHP dependencies
       run: |
-        echo "Installing npm dependencies..."
-        npm install
-        echo "Dependencies installed."
-
-    - name: Build Project
-      run: |
-        echo "Building the project..."
-        npm run build
-        echo "Project built successfully."
-
-    - name: Print working directory
-      run: |
-        echo "Current working directory: $(pwd)"
+        echo "Installing PHP dependencies..."
+        composer install --no-interaction --no-dev || { echo "Composer install failed"; exit 1; }
+        echo "PHP dependencies installed."
 
     - name: List files in the directory
-      run: |
-        ls -la
+      run: dir /s
 
     - name: Print contents of deploy.yml
-      run: |
-        cat .github/workflows/deploy.yml
+      run: type .github/workflows/deploy.yml
 
     - name: Deploy to XAMPP
       run: |
         echo "Deploying to XAMPP..."
-        robocopy . C:\xampp\htdocs\foodorder /E /MIR /XD node_modules .git /MAXLENGTH:255
-        if %ERRORLEVEL% LSS 8 (
-          echo "Deployment to XAMPP successful."
-        ) else (
-          echo "Deployment to XAMPP failed with error level %ERRORLEVEL%."
-          exit %ERRORLEVEL%
-        )
+        robocopy . C:\xampp\htdocs\foodorder /E /MIR /XD node_modules .git /MAXLENGTH:255 || { echo "Deployment to XAMPP failed"; exit 1; }
+        echo "Deployment to XAMPP successful."
 
     - name: Restart Apache
       run: |
@@ -64,3 +42,13 @@ jobs:
         net stop Apache2.4
         echo "Starting Apache..."
         net start Apache2.4
+
+    - name: Set up SSH
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: Deploy via SSH
+      run: |
+        echo "Deploying via SSH..."
+        ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "cd /path/to/your/wordpress && git pull origin main && wp-cli --path=/path/to/your/wordpress --allow-root plugin update --all"
