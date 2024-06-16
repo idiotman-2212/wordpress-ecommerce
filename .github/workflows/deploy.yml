@@ -1,54 +1,59 @@
+---
 name: Deploy WordPress Site
-
 on:
   push:
     branches:
-      - main  # Workflow được kích hoạt khi có push vào nhánh main
-
+      - main
 jobs:
   build:
     runs-on: windows-latest
-
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "7.4"
+      - name: Check for composer.json
+        run: >
+          if [ ! -f composer.json ]; then echo "composer.json not found. Exiting...";
+          exit 1; fi
 
-    - name: Set up PHP
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: '7.4'
+          echo "composer.json found."
+      - name: Install PHP dependencies
+        run: >
+          echo "Installing PHP dependencies..."
 
-    - name: Install PHP dependencies
-      run: |
-        echo "Installing PHP dependencies..."
-        composer install --no-interaction --no-dev || { echo "Composer install failed"; exit 1; }
-        echo "PHP dependencies installed."
+          composer install --no-interaction --no-dev || { echo "Composer install failed"; exit 1; }
 
-    - name: List files in the directory
-      run: dir /s
+          echo "PHP dependencies installed."
+      - name: List files in the directory
+        run: |
+          echo "Listing files in the repository..."
+          Get-ChildItem -Recurse
+      - name: Print contents of deploy.yml
+        run: |
+          echo "Contents of deploy.yml:"
+          type .github/workflows/deploy.yml
+      - name: Deploy to XAMPP
+        run: >
+          echo "Deploying to XAMPP..."
 
-    - name: Print contents of deploy.yml
-      run: type .github/workflows/deploy.yml
+          robocopy . C:\xampp\htdocs\foodorder /E /MIR /XD node_modules .git /MAXLENGTH:255 || { echo "Deployment to XAMPP failed"; exit 1; }
 
-    - name: Deploy to XAMPP
-      run: |
-        echo "Deploying to XAMPP..."
-        robocopy . C:\xampp\htdocs\foodorder /E /MIR /XD node_modules .git /MAXLENGTH:255 || { echo "Deployment to XAMPP failed"; exit 1; }
-        echo "Deployment to XAMPP successful."
+          echo "Deployment to XAMPP successful."
+      - name: Restart Apache
+        run: |
+          echo "Stopping Apache..."
+          net stop Apache2.4
+          echo "Starting Apache..."
+          net start Apache2.4
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Deploy via SSH
+        run: >
+          echo "Deploying via SSH..."
 
-    - name: Restart Apache
-      run: |
-        echo "Stopping Apache..."
-        net stop Apache2.4
-        echo "Starting Apache..."
-        net start Apache2.4
-
-    - name: Set up SSH
-      uses: webfactory/ssh-agent@v0.5.3
-      with:
-        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-    - name: Deploy via SSH
-      run: |
-        echo "Deploying via SSH..."
-        ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "cd /path/to/your/wordpress && git pull origin main && wp-cli --path=/path/to/your/wordpress --allow-root plugin update --all"
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "cd /path/to/your/wordpress && git pull origin main && wp-cli --path=/path/to/your/wordpress --allow-root plugin update --all"
