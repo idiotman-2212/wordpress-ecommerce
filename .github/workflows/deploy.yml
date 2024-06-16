@@ -20,9 +20,22 @@ jobs:
         run: |
           $env:SSH_KEY_CONTENT = "${{ secrets.SERVER_SSH_KEY }}"
           $env:SSH_KEY_PATH = "C:\\Users\\DELL\\.ssh\\id_rsa"
+          
+          # Tạo thư mục .ssh nếu chưa tồn tại
+          if (-Not (Test-Path -Path "$env:USERPROFILE\.ssh")) {
+              New-Item -Path "$env:USERPROFILE\.ssh" -ItemType Directory -Force
+          }
+
+          # Xóa tệp SSH key cũ nếu tồn tại
+          if (Test-Path -Path $env:SSH_KEY_PATH) {
+              Remove-Item -Path $env:SSH_KEY_PATH -Force
+          }
+
+          # Lưu SSH key vào tệp
           $env:SSH_KEY_CONTENT = $env:SSH_KEY_CONTENT -replace '\\n', ''
-          New-Item -Path "$env:USERPROFILE\.ssh" -ItemType Directory -Force
           [System.IO.File]::WriteAllText($env:SSH_KEY_PATH, $env:SSH_KEY_CONTENT)
+
+          # Đặt quyền truy cập cho tệp SSH key
           icacls $env:SSH_KEY_PATH /inheritance:r
           icacls $env:SSH_KEY_PATH /grant:r "Everyone:(R)"
 
