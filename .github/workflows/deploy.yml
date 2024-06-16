@@ -45,7 +45,7 @@ jobs:
           Write-Output "Setting permissions for $env:SSH_KEY_PATH"
           icacls $env:SSH_KEY_PATH /inheritance:r
           icacls $env:SSH_KEY_PATH /grant:r "${env:USERNAME}:(R,W)"
-        shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+        shell: C:\Program Files\PowerShell\7\pwsh.EXE
 
       - name: Sync WordPress Files to Server
         run: |
