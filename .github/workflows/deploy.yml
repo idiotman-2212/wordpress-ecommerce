@@ -50,11 +50,22 @@ jobs:
       - name: Deploy to XAMPP
         run: |
           Write-Output "Deploying to XAMPP..."
-          robocopy . C:\xampp\htdocs\foodorder /E /MIR /XD node_modules .git || {
-            Write-Output "Deployment to XAMPP failed";
-            exit 1;
+          $source = "."
+          $destination = "C:\xampp\htdocs\foodorder"
+          $logFile = "C:\xampp\htdocs\deploy.log"
+          Write-Output "Running robocopy from $source to $destination"
+          robocopy $source $destination /E /MIR /XD node_modules .git /LOG+:$logFile || {
+            Write-Output "Deployment to XAMPP failed"
+            Get-Content $logFile
+            exit 1
           }
-          Write-Output "Deployment to XAMPP successful."
+          Write-Output "Deployment to XAMPP successful. Log file contents:"
+          Get-Content $logFile
+
+      - name: Check XAMPP folder permissions
+        run: |
+          Write-Output "Checking permissions for XAMPP directory..."
+          icacls "C:\xampp\htdocs\foodorder" /T
 
       - name: Restart Nginx
         run: |
