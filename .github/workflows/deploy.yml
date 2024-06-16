@@ -6,43 +6,24 @@ on:
       - main
 
 jobs:
-  build:
-    runs-on: windows-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '7.4'
-
-      - name: Install dependencies
-        run: |
-          cd C:/xampp/htdocs/foodorder
-          composer install
-          npm install
-
-      - name: Build project
-        run: |
-          cd C:/xampp/htdocs/foodorder
-          npm run build
-
   deploy:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Deploy to XAMPP
         run: |
-          cd C:/xampp/htdocs/foodorder
-          # Pull the latest code from the repository
-          git pull origin main
-          # Copy files to the XAMPP htdocs directory
-          xcopy /E /Y . C:/xampp/htdocs/foodorder
-          # Restart XAMPP services
-          sc stop Apache2.4
-          sc start Apache2.4
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
+          cd /path/to/xampp/htdocs/foodorder &&
+          git pull origin main &&
+          composer install &&
+          npm install &&
+          npm run build
+          "
