@@ -23,10 +23,10 @@
 define( 'DB_NAME', 'foodorder' );
 
 /** Database username */
-define( 'DB_USER', 'root' );
+define( 'DB_USER', 'huydien' );
 
 /** Database password */
-define( 'DB_PASSWORD', '' );
+define( 'DB_PASSWORD', '123456' );
 
 /** Database hostname */
 define( 'DB_HOST', 'localhost' );
