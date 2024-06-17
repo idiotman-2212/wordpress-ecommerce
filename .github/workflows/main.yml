@@ -30,8 +30,5 @@ jobs:
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_PRIVATE_KEY }}
         source: "./*"  
-<<<<<<< HEAD
         target: "/src/www/wordpress/"
-=======
-        target: "/src/www/wordpress/"
->>>>>>> 6d3d761089d69c215fe7c62545260bcf8de6fd19
+
