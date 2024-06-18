@@ -50,14 +50,12 @@ CICD Wordpress using Github Action
 * 1.Tạo workflow file:
 - Tạo file .github/workflows/main.yml trong repository của bạn.
 * 2.Nội dung file main.yml:
-     <pre>
-       name: Deploy to EC2new
-
+<pre>
+name: Deploy to EC2new
 on:
   push:
     branches:
       - main
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -84,7 +82,7 @@ jobs:
         source: "./*"
         target: "/src/www/wordpress/"
 
-     </pre>
+</pre>
 ## Thiết lập Secrets trên GitHub
 * 1.Truy cập vào repository của bạn trên GitHub.
 * 2.Đi tới Settings > Secrets > Actions.
