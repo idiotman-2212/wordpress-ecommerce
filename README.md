@@ -12,6 +12,8 @@ CICD Wordpress using Github Action
     - SSH (Port 22): cho phép IP của bạn hoặc mở cho toàn thế giới (0.0.0.0/0) nếu cần.
     - HTTP (Port 80): cho phép toàn thế giới (0.0.0.0/0).
     - HTTPS (Port 443): cho phép toàn thế giới (0.0.0.0/0).
+![image](https://github.com/idiotman-2212/wordpress-ecommerce/assets/82036270/f2082de1-8947-48b8-9cfe-512d4f287093)
+
 # Tham số thiết lập cấu hình Reverse Proxy
 ## Cài đặt Apache và cấu hình Reverse Proxy
 * 1.Cài đặt Apache
