@@ -32,7 +32,8 @@ CICD Wordpress using Github Action
 - Tạo hoặc chỉnh sửa file cấu hình Virtual Host của Apache:
 <pre>sudo nano /etc/apache2/sites-available/000-default.conf</pre>
 - Nội dung file
-<pre><VirtualHost *:80>
+<pre>
+<VirtualHost *:80>
     ProxyPreserveHost On
     ProxyPass / http://localhost:8080/
     ProxyPassReverse / http://localhost:8080/
